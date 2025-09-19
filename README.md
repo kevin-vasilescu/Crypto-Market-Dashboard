@@ -1,12 +1,5 @@
 # 📊 Crypto Market Dashboard
 
-<div align="center">
-  [![Python](https://img.shields.io/badge/python-v3.8+-blue.svg)](https://www.python.org/downloads/)
-  [![Streamlit](https://img.shields.io/badge/streamlit-1.28+-red.svg)](https://streamlit.io/)
-  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-  [![GitHub stars](https://img.shields.io/github/stars/kevin-vasilescu/crypto-market-dashboard.svg)](https://github.com/kevin-vasilescu/crypto-market-dashboard/stargazers)
-</div>
-
 ## 🚀 Overview
 
 A comprehensive cryptocurrency market analysis dashboard that provides real-time price tracking, technical analysis, and interactive visualizations. Built with Python, Streamlit, and modern data visualization libraries.
