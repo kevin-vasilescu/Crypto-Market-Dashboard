@@ -1,0 +1,124 @@
+import requests
+import pandas as pd
+from datetime import datetime, timedelta
+import time
+
+class CoinGeckoAPI:
+    def __init__(self):
+        self.base_url = "https://api.coingecko.com/api/v3"
+
+    def fetch_coin_prices(self, coins, vs_currency="usd"):
+        """
+        Fetch current prices for specified coins from CoinGecko API
+
+        Args:
+            coins (list): List of coin IDs (e.g., ['bitcoin', 'ethereum'])
+            vs_currency (str): Target currency (default: 'usd')
+
+        Returns:
+            list: Market data for each coin
+        """
+        try:
+            url = f"{self.base_url}/coins/markets"
+            params = {
+                "vs_currency": vs_currency,
+                "ids": ",".join(coins),
+                "order": "market_cap_desc",
+                "per_page": len(coins),
+                "page": 1,
+                "sparkline": False,
+                "price_change_percentage": "1h,24h,7d"
+            }
+
+            response = requests.get(url, params=params, timeout=10)
+            response.raise_for_status()
+            return response.json()
+
+        except requests.exceptions.RequestException as e:
+            print(f"Error fetching coin prices: {e}")
+            return None
+
+    def fetch_historical_data(self, coin_id, days=30, vs_currency="usd"):
+        """
+        Fetch historical market data for a specific coin
+
+        Args:
+            coin_id (str): Coin ID (e.g., 'bitcoin')
+            days (int): Number of days of historical data
+            vs_currency (str): Target currency
+
+        Returns:
+            dict: Historical price data
+        """
+        try:
+            url = f"{self.base_url}/coins/{coin_id}/market_chart"
+            params = {
+                "vs_currency": vs_currency,
+                "days": days
+            }
+
+            response = requests.get(url, params=params, timeout=10)
+            response.raise_for_status()
+            return response.json()
+
+        except requests.exceptions.RequestException as e:
+            print(f"Error fetching historical data for {coin_id}: {e}")
+            return None
+
+def get_price_data(coins, start_date=None, end_date=None):
+    """
+    Main function to fetch price data with error handling and data formatting
+
+    Args:
+        coins (list): List of cryptocurrency IDs
+        start_date (str): Start date (optional)
+        end_date (str): End date (optional)
+
+    Returns:
+        pd.DataFrame: Formatted price data
+    """
+    api = CoinGeckoAPI()
+
+    # Fetch current market data
+    market_data = api.fetch_coin_prices(coins)
+    if not market_data:
+        return pd.DataFrame()
+
+    # Convert to DataFrame
+    df = pd.DataFrame(market_data)
+
+    # Add timestamp
+    df['timestamp'] = pd.to_datetime('now')
+
+    # Calculate additional metrics
+    df['market_cap_billions'] = df['market_cap'] / 1e9
+    df['volume_millions'] = df['total_volume'] / 1e6
+
+    return df
+
+def get_historical_prices(coin_id, days=30):
+    """
+    Get historical price data and format for analysis
+
+    Args:
+        coin_id (str): Cryptocurrency ID
+        days (int): Number of days of history
+
+    Returns:
+        pd.DataFrame: Historical price data with timestamps
+    """
+    api = CoinGeckoAPI()
+
+    data = api.fetch_historical_data(coin_id, days)
+    if not data:
+        return pd.DataFrame()
+
+    # Convert price data to DataFrame
+    prices = data.get('prices', [])
+    df = pd.DataFrame(prices, columns=['timestamp', 'price'])
+
+    # Convert timestamp to datetime
+    df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
+    df.set_index('timestamp', inplace=True)
+
+    return df
